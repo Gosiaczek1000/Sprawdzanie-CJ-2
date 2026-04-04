@@ -7,14 +7,6 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 }
 
-NUMER_PATTERN = re.compile(
-    r'\b('
-    r'[A-Z]\s?\d{3,4}-\d{3}'         # np. C 132-017
-    r'|'
-    r'\d{4}[A-Z]-\d{3}'              # np. 0578A-130
-    r')\b'
-)
-
 MATERIAL_KEYWORDS = [
     "bawełna", "elastan", "poliester", "wiskoza", "len", "modal",
     "akryl", "wełna", "poliamid", "lyocell", "denim", "skład", "materiał"
@@ -22,7 +14,8 @@ MATERIAL_KEYWORDS = [
 
 COLOR_KEYWORDS = [
     "czarny", "czarna", "czarne", "black",
-    "niebieski", "niebieska", "niebieskie", "blue", "mid blue", "dark blue", "light blue",
+    "niebieski", "niebieska", "niebieskie", "blue",
+    "mid blue", "dark blue", "light blue",
     "granatowy", "navy",
     "szary", "szara", "szare", "grey", "gray",
     "biały", "biała", "białe", "white",
@@ -40,11 +33,24 @@ COLOR_KEYWORDS = [
     "turkusowy", "turkusowa", "turkusowe", "turquoise"
 ]
 
+# Łapie np.:
+# C 132-017
+# C 132-017 BLACK
+# C 132-017 DARK BLUE
+# 0578A-130
+# 0578A-130 TURQUOISE
+# 0578A-130 DARK BLUE
+NUMER_PATTERN = re.compile(
+    r'\b('
+    r'[A-Z]\s?\d{3,4}-\d{3}(?:\s+[A-Z]+(?:\s+[A-Z]+)?)?'
+    r'|'
+    r'\d{4}[A-Z]-\d{3}(?:\s+[A-Z]+(?:\s+[A-Z]+)?)?'
+    r')\b'
+)
 
 def wczytaj_linki(nazwa_pliku):
     with open(nazwa_pliku, "r", encoding="utf-8") as f:
         return [linia.strip() for linia in f if linia.strip()]
-
 
 def pobierz_html(url):
     try:
@@ -54,7 +60,6 @@ def pobierz_html(url):
     except Exception as e:
         print(f"Błąd przy pobieraniu {url}: {e}")
         return None
-
 
 def wyciagnij_naglowek(soup):
     h1 = soup.find("h1")
@@ -70,14 +75,12 @@ def wyciagnij_naglowek(soup):
 
     return ""
 
-
 def czy_jest_material(tekst_strony):
     tekst = tekst_strony.lower()
     for slowo in MATERIAL_KEYWORDS:
         if slowo in tekst:
             return "tak"
     return "nie"
-
 
 def znajdz_kolor(naglowek, tekst_strony):
     caly_tekst = f"{naglowek} {tekst_strony}".lower()
@@ -97,20 +100,18 @@ def znajdz_kolor(naglowek, tekst_strony):
 
     return "nie", ""
 
-
 def znajdz_numer(naglowek, tekst_strony):
     match_naglowek = NUMER_PATTERN.search(naglowek)
     if match_naglowek:
-        numer = match_naglowek.group(1).strip()
+        numer = " ".join(match_naglowek.group(1).split())
         return "tak", numer
 
     match_strona = NUMER_PATTERN.search(tekst_strony)
     if match_strona:
-        numer = match_strona.group(1).strip()
+        numer = " ".join(match_strona.group(1).split())
         return "tak", numer
 
     return "nie", ""
-
 
 def analizuj_link(url):
     html = pobierz_html(url)
@@ -144,21 +145,20 @@ def analizuj_link(url):
         "wypisany numer": numer
     }
 
-
 def main():
     linki = wczytaj_linki("linki.txt")
     wyniki = []
 
     for i, link in enumerate(linki, start=1):
         print(f"Sprawdzam {i}/{len(linki)}: {link}")
-        wyniki.append(analizuj_link(link))
+        wynik = analizuj_link(link)
+        wyniki.append(wynik)
 
     df = pd.DataFrame(wyniki)
     df.to_excel("wyniki.xlsx", index=False)
     df.to_csv("wyniki.csv", index=False, encoding="utf-8-sig")
 
-    print("Gotowe. Zapisano wyniki.xlsx i wyniki.csv")
-
+    print("Gotowe. Zapisano pliki: wyniki.xlsx oraz wyniki.csv")
 
 if __name__ == "__main__":
     main()
