@@ -9,7 +9,9 @@ HEADERS = {
 
 MATERIAL_KEYWORDS = [
     "bawełna", "elastan", "poliester", "wiskoza", "len", "modal",
-    "akryl", "wełna", "poliamid", "lyocell", "denim", "skład", "materiał"
+    "akryl", "wełna", "poliamid", "lyocell", "denim",
+    "skład", "materiał",
+    "cotton", "polyester", "viscose", "acrylic", "wool", "polyamide"
 ]
 
 COLOR_KEYWORDS = [
@@ -33,7 +35,7 @@ COLOR_KEYWORDS = [
     "turkusowy", "turkusowa", "turkusowe", "turquoise"
 ]
 
-# Łapie np.:
+# Obsługiwane przykłady:
 # C 132-017
 # C 132-017 BLACK
 # C 132-017 DARK BLUE
@@ -77,9 +79,15 @@ def wyciagnij_naglowek(soup):
 
 def czy_jest_material(tekst_strony):
     tekst = tekst_strony.lower()
+
+    # Gdy na stronie jest skład typu 100% Akryl / 98% Cotton
+    if "%" in tekst:
+        return "tak"
+
     for slowo in MATERIAL_KEYWORDS:
         if slowo in tekst:
             return "tak"
+
     return "nie"
 
 def znajdz_kolor(naglowek, tekst_strony):
