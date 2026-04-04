@@ -7,7 +7,13 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 }
 
-NUMER_PATTERN = re.compile(r'\b([A-Z]\s?\d{3,4}-\d{3})\b')
+NUMER_PATTERN = re.compile(
+    r'\b('
+    r'[A-Z]\s?\d{3,4}-\d{3}'         # np. C 132-017
+    r'|'
+    r'\d{4}[A-Z]-\d{3}'              # np. 0578A-130
+    r')\b'
+)
 
 MATERIAL_KEYWORDS = [
     "bawełna", "elastan", "poliester", "wiskoza", "len", "modal",
@@ -30,7 +36,8 @@ COLOR_KEYWORDS = [
     "kremowy", "kremowa", "kremowe",
     "żółty", "żółta", "żółte", "yellow",
     "pomarańczowy", "pomarańczowa", "pomarańczowe", "orange",
-    "fioletowy", "fioletowa", "fioletowe", "purple"
+    "fioletowy", "fioletowa", "fioletowe", "purple",
+    "turkusowy", "turkusowa", "turkusowe", "turquoise"
 ]
 
 
@@ -77,7 +84,7 @@ def znajdz_kolor(naglowek, tekst_strony):
 
     znalezione = []
     for kolor in COLOR_KEYWORDS:
-        if kolor in caly_tekst:
+        if kolor.lower() in caly_tekst:
             znalezione.append(kolor)
 
     unikalne = []
@@ -87,18 +94,19 @@ def znajdz_kolor(naglowek, tekst_strony):
 
     if unikalne:
         return "tak", ", ".join(unikalne)
+
     return "nie", ""
 
 
 def znajdz_numer(naglowek, tekst_strony):
     match_naglowek = NUMER_PATTERN.search(naglowek)
     if match_naglowek:
-        numer = match_naglowek.group(1).replace("  ", " ").strip()
+        numer = match_naglowek.group(1).strip()
         return "tak", numer
 
     match_strona = NUMER_PATTERN.search(tekst_strony)
     if match_strona:
-        numer = match_strona.group(1).replace("  ", " ").strip()
+        numer = match_strona.group(1).strip()
         return "tak", numer
 
     return "nie", ""
